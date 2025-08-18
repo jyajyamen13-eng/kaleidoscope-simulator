@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>万華鏡シミュレーター</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --accent: #06b6d4;
+            --accent-hover: #0891b2;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .control-panel {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+        
+        .slider-container {
+            background: rgba(51, 65, 85, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            outline: none;
+            border-radius: 3px;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--accent);
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--accent);
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+        }
+        
+        .btn {
+            background: var(--accent);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: var(--accent-hover);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .btn-secondary:hover {
+            background: #475569;
+        }
+        
+        .kaleidoscope-canvas {
+            border: 2px solid rgba(6, 182, 212, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.2);
+        }
+        
+        .value-display {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        .preset-btn {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            color: var(--accent);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+        
+        .preset-btn:hover {
+            background: rgba(6, 182, 212, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-2">
+                <i class="fas fa-gem mr-3" style="color: var(--accent);"></i>
+                万華鏡シミュレーター
+            </h1>
+            <p class="text-lg text-gray-400">光学理論に基づくリアルタイム万華鏡生成</p>
+        </div>
+
+        <div class="grid lg:grid-cols-4 gap-6">
+            <!-- Control Panel -->
+            <div class="lg:col-span-1">
+                <div class="control-panel rounded-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-sliders-h mr-2"></i>
+                        パラメータ制御
+                    </h3>
+                    
+                    <!-- Angle Control -->
+                    <div class="slider-container">
+                        <label class="block text-sm font-medium mb-2">
+                            <i class="fas fa-angle-right mr-1"></i>
+                            鏡角度: <span id="angleValue" class="value-display">60°</span>
+                        </label>
+                        <input type="range" id="angleSlider" class="slider" min="10" max="180" step="1" value="60">
+                        <div class="text-xs text-gray-400 mt-1">予想像数: <span id="imageCount" class="value-display">6</span></div>
+                    </div>
+
+                    <!-- Reflectance Control -->
+                    <div class="slider-container">
+                        <label class="block text-sm font-medium mb-2">
+                            <i class="fas fa-mirror mr-1"></i>
+                            反射率: <span id="reflectValue" class="value-display">0.975</span>
+                        </label>
+                        <input type="range" id="reflectSlider" class="slider" min="0.85" max="0.995" step="0.005" value="0.975">
+                        <div class="text-xs text-gray-400 mt-1">銀鏡: ~0.975, アルミ: ~0.90</div>
+                    </div>
+
+                    <!-- Object Count Control -->
+                    <div class="slider-container">
+                        <label class="block text-sm font-medium mb-2">
+                            <i class="fas fa-dots mr-1"></i>
+                            オブジェクト数: <span id="objectValue" class="value-display">100</span>
+                        </label>
+                        <input type="range" id="objectSlider" class="slider" min="20" max="300" step="10" value="100">
+                    </div>
+
+                    <!-- Speed Control -->
+                    <div class="slider-container">
+                        <label class="block text-sm font-medium mb-2">
+                            <i class="fas fa-tachometer-alt mr-1"></i>
+                            動作速度: <span id="speedValue" class="value-display">1.0x</span>
+                        </label>
+                        <input type="range" id="speedSlider" class="slider" min="0" max="3" step="0.1" value="1.0">
+                    </div>
+
+                    <!-- Presets -->
+                    <div class="mt-6">
+                        <h4 class="text-sm font-medium mb-3">
+                            <i class="fas fa-star mr-1"></i>
+                            プリセット
+                        </h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button class="preset-btn" onclick="setPreset(60, 0.975)">6角形</button>
+                            <button class="preset-btn" onclick="setPreset(90, 0.975)">4角形</button>
+                            <button class="preset-btn" onclick="setPreset(45, 0.975)">8角形</button>
+                            <button class="preset-btn" onclick="setPreset(72, 0.975)">5角形</button>
+                            <button class="preset-btn" onclick="setPreset(60, 0.90)">アルミ鏡</button>
+                            <button class="preset-btn" onclick="setPreset(30, 0.975)">12角形</button>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="mt-6 space-y-2">
+                        <button id="pauseBtn" class="btn w-full">
+                            <i class="fas fa-pause mr-2"></i>
+                            一時停止
+                        </button>
+                        <button id="shuffleBtn" class="btn-secondary btn w-full">
+                            <i class="fas fa-random mr-2"></i>
+                            シャッフル
+                        </button>
+                        <button id="resetBtn" class="btn-secondary btn w-full">
+                            <i class="fas fa-redo mr-2"></i>
+                            リセット
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="lg:col-span-3">
+                <div class="bg-black rounded-lg p-4" style="height: 600px;">
+                    <canvas id="kaleidoscope" class="kaleidoscope-canvas w-full h-full"></canvas>
+                </div>
+                
+                <!-- Info Panel -->
+                <div class="control-panel rounded-lg p-4 mt-4">
+                    <div class="text-sm text-gray-400">
+                        <p><i class="fas fa-info-circle mr-2"></i>リアルタイム光学シミュレーション - パラメータを調整して様々なパターンをお楽しみください</p>
+                        <p class="mt-2"><i class="fas fa-lightbulb mr-2"></i>角度を小さくするほど複雑なパターン、大きくするほどシンプルなパターンが生成されます</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class KaleidoscopeSimulator {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.resizeCanvas();
+                
+                // Parameters
+                this.angle = 60;
+                this.reflectance = 0.975;
+                this.objectCount = 100;
+                this.speed = 1.0;
+                this.paused = false;
+                
+                // Animation
+                this.objects = [];
+                this.time = 0;
+                this.animationId = null;
+                
+                // Offscreen canvas for base wedge
+                this.offCanvas = document.createElement('canvas');
+                this.offCtx = this.offCanvas.getContext('2d');
+                
+                this.initializeObjects();
+                this.start();
+                
+                // Resize handler
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+            
+            resizeCanvas() {
+                const container = this.canvas.parentElement;
+                const rect = container.getBoundingClientRect();
+                const size = Math.min(rect.width - 8, rect.height - 8);
+                
+                this.canvas.width = size;
+                this.canvas.height = size;
+                this.canvas.style.width = size + 'px';
+                this.canvas.style.height = size + 'px';
+                
+                this.centerX = size / 2;
+                this.centerY = size / 2;
+                this.radius = size * 0.45;
+                
+                // Update offscreen canvas
+                this.offCanvas.width = size;
+                this.offCanvas.height = size;
+            }
+            
+            initializeObjects() {
+                this.objects = [];
+                const colors = [
+                    '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57',
+                    '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#ff9f43',
+                    '#ffa8a8', '#8ed1fc', '#ffc7c7', '#8ecc93', '#ffd93d'
+                ];
+                
+                for (let i = 0; i < this.objectCount; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.sqrt(Math.random()) * this.radius * 0.8;
+                    
+                    this.objects.push({
+                        x: Math.cos(angle) * distance,
+                        y: Math.sin(angle) * distance,
+                        vx: (Math.random() - 0.5) * 50,
+                        vy: (Math.random() - 0.5) * 50,
+                        size: 2 + Math.random() * 6,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        shape: Math.random() < 0.5 ? 'circle' : 'polygon',
+                        sides: 3 + Math.floor(Math.random() * 4)
+                    });
+                }
+            }
+            
+            updateObjects(deltaTime) {
+                if (this.paused) return;
+                
+                const dt = deltaTime * this.speed * 0.001;
+                const boundaryRadius = this.radius * 0.85;
+                
+                for (const obj of this.objects) {
+                    obj.x += obj.vx * dt;
+                    obj.y += obj.vy * dt;
+                    
+                    // Boundary collision
+                    const distance = Math.sqrt(obj.x * obj.x + obj.y * obj.y);
+                    if (distance > boundaryRadius - obj.size) {
+                        const nx = obj.x / distance;
+                        const ny = obj.y / distance;
+                        const dotProduct = obj.vx * nx + obj.vy * ny;
+                        
+                        obj.vx -= 2 * dotProduct * nx;
+                        obj.vy -= 2 * dotProduct * ny;
+                        
+                        // Push back inside boundary
+                        const pushBack = (boundaryRadius - obj.size) / distance;
+                        obj.x *= pushBack;
+                        obj.y *= pushBack;
+                    }
+                    
+                    // Slight damping
+                    obj.vx *= 0.999;
+                    obj.vy *= 0.999;
+                }
+            }
+            
+            drawWedge() {
+                const ctx = this.offCtx;
+                const wedgeAngle = (this.angle * Math.PI) / 180;
+                
+                ctx.clearRect(0, 0, this.offCanvas.width, this.offCanvas.height);
+                ctx.save();
+                ctx.translate(this.centerX, this.centerY);
+                
+                // Create wedge clip
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, this.radius, -wedgeAngle/2, wedgeAngle/2);
+                ctx.closePath();
+                ctx.clip();
+                
+                // Background gradient
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+                gradient.addColorStop(0, 'rgba(255,255,255,0.05)');
+                gradient.addColorStop(1, 'rgba(255,255,255,0.00)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(-this.radius, -this.radius, this.radius * 2, this.radius * 2);
+                
+                // Draw objects
+                for (const obj of this.objects) {
+                    ctx.save();
+                    ctx.translate(obj.x, obj.y);
+                    ctx.fillStyle = obj.color;
+                    
+                    if (obj.shape === 'circle') {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, obj.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        ctx.beginPath();
+                        for (let i = 0; i < obj.sides; i++) {
+                            const angle = (i / obj.sides) * Math.PI * 2;
+                            const x = Math.cos(angle) * obj.size;
+                            const y = Math.sin(angle) * obj.size;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+                
+                ctx.restore();
+            }
+            
+            draw() {
+                this.drawWedge();
+                
+                const ctx = this.ctx;
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                ctx.save();
+                ctx.translate(this.centerX, this.centerY);
+                
+                // Circular clip
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.clip();
+                
+                // Draw kaleidoscope segments
+                const wedgeAngle = (this.angle * Math.PI) / 180;
+                const segments = Math.max(1, Math.floor((2 * Math.PI) / wedgeAngle));
+                
+                for (let i = 0; i < segments; i++) {
+                    ctx.save();
+                    ctx.rotate(i * wedgeAngle);
+                    if (i % 2 === 1) {
+                        ctx.scale(1, -1);
+                    }
+                    ctx.globalAlpha = Math.pow(this.reflectance, i);
+                    ctx.drawImage(this.offCanvas, -this.centerX, -this.centerY);
+                    ctx.restore();
+                }
+                
+                ctx.restore();
+                
+                // Border
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, this.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(6, 182, 212, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            animate() {
+                const now = performance.now();
+                if (this.lastTime) {
+                    const deltaTime = now - this.lastTime;
+                    this.updateObjects(deltaTime);
+                }
+                this.lastTime = now;
+                
+                this.draw();
+                this.animationId = requestAnimationFrame(() => this.animate());
+            }
+            
+            start() {
+                if (!this.animationId) {
+                    this.animate();
+                }
+            }
+            
+            stop() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+            }
+            
+            togglePause() {
+                this.paused = !this.paused;
+            }
+            
+            shuffle() {
+                this.initializeObjects();
+            }
+            
+            reset() {
+                this.angle = 60;
+                this.reflectance = 0.975;
+                this.objectCount = 100;
+                this.speed = 1.0;
+                this.initializeObjects();
+                this.updateUI();
+            }
+            
+            setAngle(angle) {
+                this.angle = Math.max(10, Math.min(180, angle));
+            }
+            
+            setReflectance(reflectance) {
+                this.reflectance = Math.max(0.85, Math.min(0.995, reflectance));
+            }
+            
+            setObjectCount(count) {
+                this.objectCount = Math.max(20, Math.min(300, count));
+                this.initializeObjects();
+            }
+            
+            setSpeed(speed) {
+                this.speed = Math.max(0, Math.min(3, speed));
+            }
+            
+            updateUI() {
+                document.getElementById('angleSlider').value = this.angle;
+                document.getElementById('reflectSlider').value = this.reflectance;
+                document.getElementById('objectSlider').value = this.objectCount;
+                document.getElementById('speedSlider').value = this.speed;
+                
+                updateDisplayValues();
+            }
+        }
+        
+        // Initialize
+        const canvas = document.getElementById('kaleidoscope');
+        const kaleidoscope = new KaleidoscopeSimulator(canvas);
+        
+        // UI Controls
+        function updateDisplayValues() {
+            const angle = parseInt(document.getElementById('angleSlider').value);
+            const reflect = parseFloat(document.getElementById('reflectSlider').value);
+            const objects = parseInt(document.getElementById('objectSlider').value);
+            const speed = parseFloat(document.getElementById('speedSlider').value);
+            
+            document.getElementById('angleValue').textContent = angle + '°';
+            document.getElementById('reflectValue').textContent = reflect.toFixed(3);
+            document.getElementById('objectValue').textContent = objects;
+            document.getElementById('speedValue').textContent = speed.toFixed(1) + 'x';
+            
+            const imageCount = Math.max(1, Math.floor(360 / angle));
+            document.getElementById('imageCount').textContent = imageCount;
+        }
+        
+        function setPreset(angle, reflectance) {
+            kaleidoscope.setAngle(angle);
+            kaleidoscope.setReflectance(reflectance);
+            kaleidoscope.updateUI();
+        }
+        
+        // Event listeners
+        document.getElementById('angleSlider').addEventListener('input', (e) => {
+            kaleidoscope.setAngle(parseInt(e.target.value));
+            updateDisplayValues();
+        });
+        
+        document.getElementById('reflectSlider').addEventListener('input', (e) => {
+            kaleidoscope.setReflectance(parseFloat(e.target.value));
+            updateDisplayValues();
+        });
+        
+        document.getElementById('objectSlider').addEventListener('input', (e) => {
+            kaleidoscope.setObjectCount(parseInt(e.target.value));
+            updateDisplayValues();
+        });
+        
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            kaleidoscope.setSpeed(parseFloat(e.target.value));
+            updateDisplayValues();
+        });
+        
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            kaleidoscope.togglePause();
+            const btn = document.getElementById('pauseBtn');
+            if (kaleidoscope.paused) {
+                btn.innerHTML = '<i class="fas fa-play mr-2"></i>再開';
+            } else {
+                btn.innerHTML = '<i class="fas fa-pause mr-2"></i>一時停止';
+            }
+        });
+        
+        document.getElementById('shuffleBtn').addEventListener('click', () => {
+            kaleidoscope.shuffle();
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            kaleidoscope.reset();
+        });
+        
+        // Initialize display
+        updateDisplayValues();
+    </script>
+</body>
+</html>
