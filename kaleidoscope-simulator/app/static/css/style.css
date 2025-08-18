@@ -1,0 +1,467 @@
+/* 万華鏡シミュレーター - メインスタイル */
+
+/* リセットとベース */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+    color: #ffffff;
+    overflow-x: hidden;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* ヘッダー */
+.app-header {
+    background: linear-gradient(90deg, #2c3e50, #34495e);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #3498db;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.app-header h1 {
+    font-size: 1.5rem;
+    color: #ecf0f1;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.header-status {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.status-connected {
+    color: #2ecc71;
+    font-weight: bold;
+}
+
+.status-disconnected {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.performance-good {
+    background: #27ae60;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+/* メインレイアウト */
+.app-main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* 左パネル - コントロール */
+.control-panel {
+    width: 350px;
+    background: rgba(44, 62, 80, 0.95);
+    padding: 1rem;
+    overflow-y: auto;
+    border-right: 1px solid #34495e;
+}
+
+.panel-section {
+    margin-bottom: 1.5rem;
+    background: rgba(52, 73, 94, 0.8);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #3498db;
+}
+
+.panel-section h3 {
+    color: #3498db;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.panel-section h4 {
+    color: #95a5a6;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* フォーム要素 */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #bdc3c7;
+    font-weight: 500;
+}
+
+input[type="range"] {
+    width: 100%;
+    margin-right: 0.5rem;
+    accent-color: #3498db;
+}
+
+select {
+    width: 100%;
+    padding: 0.5rem;
+    background: #34495e;
+    color: #ecf0f1;
+    border: 1px solid #3498db;
+    border-radius: 4px;
+}
+
+input[type="text"], textarea {
+    width: 100%;
+    padding: 0.5rem;
+    background: #34495e;
+    color: #ecf0f1;
+    border: 1px solid #3498db;
+    border-radius: 4px;
+}
+
+/* ボタン */
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-success {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-large {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    width: 100%;
+    margin: 0.5rem 0;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.btn.active {
+    background: #e74c3c;
+}
+
+/* 中央エリア - 可視化 */
+.visualization-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(26, 26, 46, 0.95);
+    position: relative;
+}
+
+.vis-header {
+    padding: 1rem;
+    background: rgba(52, 73, 94, 0.8);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #34495e;
+}
+
+.vis-header h3 {
+    color: #3498db;
+    font-size: 1.2rem;
+}
+
+.view-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.visualization-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, rgba(52,73,94,0.3), rgba(26,26,46,0.8));
+}
+
+#kaleidoscope-canvas {
+    max-width: 100%;
+    max-height: 100%;
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    visibility: hidden;
+}
+
+.loading-overlay.active {
+    visibility: visible;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #34495e;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.pattern-info {
+    padding: 1rem;
+    background: rgba(52, 73, 94, 0.8);
+    display: flex;
+    justify-content: space-around;
+    border-top: 1px solid #34495e;
+}
+
+.info-item {
+    text-align: center;
+}
+
+.info-item .label {
+    display: block;
+    color: #95a5a6;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.info-item span:last-child {
+    color: #3498db;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* 右パネル - 分析 */
+.analysis-panel {
+    width: 350px;
+    background: rgba(44, 62, 80, 0.95);
+    padding: 1rem;
+    overflow-y: auto;
+    border-left: 1px solid #34495e;
+}
+
+.materials-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.material-item {
+    background: rgba(52, 73, 94, 0.6);
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid #3498db;
+}
+
+.material-name {
+    font-weight: bold;
+    color: #ecf0f1;
+}
+
+.material-props {
+    font-size: 0.8rem;
+    color: #95a5a6;
+    margin-top: 0.25rem;
+}
+
+.history-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.history-item {
+    background: rgba(52, 73, 94, 0.6);
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid #27ae60;
+    cursor: pointer;
+}
+
+.history-item:hover {
+    background: rgba(52, 73, 94, 0.8);
+}
+
+/* フッター */
+.app-footer {
+    background: rgba(44, 62, 80, 0.95);
+    padding: 0.5rem 2rem;
+    border-top: 1px solid #34495e;
+    font-size: 0.8rem;
+    color: #95a5a6;
+}
+
+.status-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+/* モーダル */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+}
+
+.modal.active {
+    display: block;
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    margin: 10% auto;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 400px;
+    border: 2px solid #3498db;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.close {
+    color: #95a5a6;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #e74c3c;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* 材料セレクター */
+.material-selector {
+    margin-bottom: 0.5rem;
+}
+
+.material-selector label {
+    font-size: 0.8rem;
+    color: #95a5a6;
+}
+
+/* レスポンシブ */
+@media (max-width: 1200px) {
+    .control-panel, .analysis-panel {
+        width: 300px;
+    }
+}
+
+@media (max-width: 900px) {
+    .app-main {
+        flex-direction: column;
+    }
+
+    .control-panel, .analysis-panel {
+        width: 100%;
+        height: 200px;
+        overflow-y: auto;
+    }
+
+    .visualization-area {
+        height: 400px;
+    }
+}
+
+/* アニメーション */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.glow {
+    box-shadow: 0 0 20px rgba(52, 152, 219, 0.8) !important;
+}
+
+/* スクロールバーのカスタマイズ */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #2c3e50;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3498db;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5dade2;
+}

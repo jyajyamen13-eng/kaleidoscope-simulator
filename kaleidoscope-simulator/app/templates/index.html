@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>万華鏡シミュレーター - 光学物理計算システム</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- ヘッダー -->
+        <header class="app-header">
+            <h1>万華鏡シミュレーター</h1>
+            <div class="header-status">
+                <span id="connection-status" class="status-disconnected">未接続</span>
+                <span id="performance-indicator" class="performance-good">Ready</span>
+            </div>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="app-main">
+            <!-- 左サイドパネル - コントロール -->
+            <aside class="control-panel">
+                <div class="panel-section">
+                    <h3>設定管理</h3>
+                    <div class="config-controls">
+                        <select id="config-select">
+                            <option value="">設定を選択...</option>
+                        </select>
+                        <button id="load-config" class="btn btn-primary">読み込み</button>
+                        <button id="save-config" class="btn btn-secondary">保存</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>万華鏡設定</h3>
+                    <div class="form-group">
+                        <label for="mirror-count">ミラー数:</label>
+                        <input type="range" id="mirror-count" min="3" max="8" value="3">
+                        <span id="mirror-count-value">3</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="physics-mode">物理モード:</label>
+                        <select id="physics-mode">
+                            <option value="dry">ドライ</option>
+                            <option value="wet">ウェット</option>
+                        </select>
+                    </div>
+
+                    <div class="materials-section">
+                        <h4>材料選択</h4>
+                        <div id="material-selectors">
+                            <!-- 動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>光源設定</h3>
+                    <div class="form-group">
+                        <label for="wavelength">波長 (nm):</label>
+                        <input type="range" id="wavelength" min="380" max="750" value="550">
+                        <span id="wavelength-value">550</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="intensity">強度:</label>
+                        <input type="range" id="intensity" min="0.1" max="2.0" step="0.1" value="1.0">
+                        <span id="intensity-value">1.0</span>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>シミュレーション設定</h3>
+                    <div class="form-group">
+                        <label for="num-rays">光線数:</label>
+                        <input type="range" id="num-rays" min="10" max="500" value="100">
+                        <span id="num-rays-value">100</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="max-bounces">最大反射回数:</label>
+                        <input type="range" id="max-bounces" min="3" max="20" value="10">
+                        <span id="max-bounces-value">10</span>
+                    </div>
+
+                    <div class="simulation-controls">
+                        <button id="run-simulation" class="btn btn-success btn-large">シミュレーション実行</button>
+                        <button id="realtime-toggle" class="btn btn-info">リアルタイム: OFF</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 中央エリア - 3D可視化 -->
+            <section class="visualization-area">
+                <div class="vis-header">
+                    <h3>万華鏡パターン</h3>
+                    <div class="view-controls">
+                        <button id="view-2d" class="btn btn-sm active">2D</button>
+                        <button id="view-3d" class="btn btn-sm">3D</button>
+                        <button id="export-image" class="btn btn-sm">画像保存</button>
+                    </div>
+                </div>
+
+                <div class="visualization-container">
+                    <canvas id="kaleidoscope-canvas"></canvas>
+                    <div id="loading-overlay" class="loading-overlay">
+                        <div class="spinner"></div>
+                        <p>計算中...</p>
+                    </div>
+                </div>
+
+                <!-- パターン情報 -->
+                <div class="pattern-info">
+                    <div class="info-item">
+                        <span class="label">光線数:</span>
+                        <span id="ray-count">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">計算時間:</span>
+                        <span id="computation-time">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">品質スコア:</span>
+                        <span id="quality-score">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 右サイドパネル - 分析 -->
+            <aside class="analysis-panel">
+                <div class="panel-section">
+                    <h3>スペクトル分析</h3>
+                    <canvas id="spectrum-chart" width="300" height="200"></canvas>
+                </div>
+
+                <div class="panel-section">
+                    <h3>パフォーマンス</h3>
+                    <canvas id="performance-chart" width="300" height="200"></canvas>
+                </div>
+
+                <div class="panel-section">
+                    <h3>材料データベース</h3>
+                    <div id="materials-list" class="materials-list">
+                        <!-- 動的に生成 -->
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>履歴</h3>
+                    <div id="simulation-history" class="history-list">
+                        <!-- 動的に生成 -->
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- ステータスバー -->
+        <footer class="app-footer">
+            <div class="status-info">
+                <span>光学計算エンジン: 準備完了</span>
+                <span>|</span>
+                <span>WebSocket: <span id="ws-status">切断</span></span>
+                <span>|</span>
+                <span>最終更新: <span id="last-update">-</span></span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- モーダル: 設定保存 -->
+    <div id="save-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>設定を保存</h2>
+            <form id="save-form">
+                <div class="form-group">
+                    <label for="config-name">設定名:</label>
+                    <input type="text" id="config-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="config-description">説明:</label>
+                    <textarea id="config-description"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-save">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/visualization.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/controls.js') }}"></script>
+</body>
+</html>
